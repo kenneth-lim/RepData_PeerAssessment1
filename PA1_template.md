@@ -12,7 +12,8 @@ output:
 
 The following code reads the data into R and converts the class of the date variable.
 
-```{r, cache=TRUE}
+
+```r
 setwd("C:/Users/Kenneth Lim/Desktop/DataScience/5. Reproducible Research/repdata-data-activity")
 data <- read.csv("activity.csv")
 data$date <- as.Date(data$date, "%Y-%m-%d")
@@ -24,22 +25,38 @@ data$date <- as.Date(data$date, "%Y-%m-%d")
 
 The following code sums the steps taken by date, ignoring missing values. 
 
-```{r, cache=TRUE}
+
+```r
 daydata <- aggregate(data$steps, by=list(date=data$date), FUN=sum, na.rm=TRUE)
 colnames(daydata)[2] <- "steps"
 ```
 
 ### Histogram of total steps per day
 
-```{r fig.width=6, fig.height=6, cache=TRUE}
+
+```r
 hist(daydata$steps, main="Histogram of total steps per day", xlab="Steps per day", col="blue")
 ```
 
+![plot of chunk unnamed-chunk-3](figure/unnamed-chunk-3-1.png) 
+
 ### Mean and median of total steps per day (ignoring missing data)
 
-```{r, cache=TRUE}
+
+```r
 mean(daydata$steps, na.rm=TRUE)
+```
+
+```
+## [1] 9354.23
+```
+
+```r
 median(daydata$steps, na.rm=TRUE)
+```
+
+```
+## [1] 10395
 ```
 
 
@@ -48,7 +65,8 @@ median(daydata$steps, na.rm=TRUE)
 
 The following code averages the steps taken by 5 minute interval, ignoring missing data.
 
-```{r, cache=TRUE}
+
+```r
 intdata <- aggregate(data$steps, by=list(interval=data$interval), FUN=mean, na.rm=TRUE)
 intdata$interval <- sprintf("%04d", intdata$interval)
 intdata$interval <- as.POSIXct(intdata$interval, format = "%H%M")
@@ -58,16 +76,24 @@ colnames(intdata)[2] <- "steps"
 
 ### Time series plot of average number of steps taken by interval
 
-```{r fig.width=6, fig.height=6, cache=TRUE}
+
+```r
 plot(intdata$steps, type="l", xlab="Time", ylab="Average steps", main="Average steps in 5 minute interval", axes=FALSE, col="darkred")
 axis(1, at=c(1, 73, 145, 217, 288), labels=c("00:00", "06:00", "12:00", "18:00", "23:55"))
 axis(2)
 ```
 
+![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-6-1.png) 
+
 ### 5-minute interval containing the maximum number of steps on average
 
-```{r, cache=TRUE}
+
+```r
 intdata[which.max(intdata[ ,"steps"]), ][ ,"interval"]
+```
+
+```
+## [1] "08:35"
 ```
 
 The 5-minute interval containing the maximum number of steps on average is 08:35 (or more specifically, 08:35 to 08:40).
@@ -78,8 +104,14 @@ The 5-minute interval containing the maximum number of steps on average is 08:35
 
 ### Number of missing values in the dataset
 
-```{r, cache=TRUE}
+
+```r
 summary(data$steps)
+```
+
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+##    0.00    0.00    0.00   37.38   12.00  806.00    2304
 ```
 
 There are 2304 missing values in the dataset.
@@ -94,8 +126,8 @@ If I impute missing values using the mean of observed instances, this will disto
 
 This is the imputation function used to impute missing data. The loop function checks each row of the data, and replaces the steps variable with the mean of the 5 minute interval (for observed instances).
 
-```{r, cache=TRUE}
 
+```r
 imputeddata <- data
 
 imputeddata$interval <- sprintf("%04d", imputeddata$interval)
@@ -112,28 +144,50 @@ for (i in 1:17568) {
 
 Check that there are no more missing data:
 
-```{r, cache=TRUE}
+
+```r
 summary(imputeddata$steps)
+```
+
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##    0.00    0.00    0.00   37.38   27.00  806.00
 ```
 
 There are no more "NA"s in the imputed data.
 
 ### Histogram of total steps taken each day, and mean and median of total steps per day
 
-```{r, cache=TRUE}
+
+```r
 imputeddaydata <- aggregate(imputeddata$steps, by=list(date=imputeddata$date), FUN=sum)
 colnames(imputeddaydata)[2] <- "steps"
 ```
 
-```{r fig.width=6, fig.height=6, cache=TRUE}
+
+```r
 hist(imputeddaydata$steps, main="Histogram of total steps per day", xlab="Steps per day", col="green")
 ```
 
+![plot of chunk unnamed-chunk-12](figure/unnamed-chunk-12-1.png) 
+
 This histogram is different from the one plotted previously (in blue). The previous histogram had a fatter left tail because there were some days where there were no readings at all (resulting in total steps of zero). With the imputation, the frequency of such days is transferred to the mean. We see a greater number of days with steps between 10000 and 15000 as a result of the imputation. The second, fourth and fifth intervals are unchanged. 
 
-```{r, cache=TRUE}
+
+```r
 mean(imputeddaydata$steps)
+```
+
+```
+## [1] 10766.19
+```
+
+```r
 median(imputeddaydata$steps)
+```
+
+```
+## [1] 10766.19
 ```
 
 The mean increases because the days with missing data now have "steps". The median also increases, and this observation may also be attributed to the days which have "steps" now. 
@@ -145,7 +199,8 @@ The mean increases because the days with missing data now have "steps". The medi
 
 The code below determines the day of the week, and creates a logical variable indicating a weekday or a weekend. 
 
-```{r, cache=TRUE}
+
+```r
 imputeddata$day <- weekdays(imputeddata$date)
 
 imputeddata$type <- 0
@@ -169,8 +224,8 @@ imputeddata$type <- as.factor(imputeddata$type)
 
 The following code averages the steps taken by 5 minute interval separately for weekdays and weekends.
 
-```{r, cache=TRUE}
 
+```r
 wkdayimputed <- subset(imputeddata, type=="weekday")
 weekday <- aggregate(wkdayimputed$steps, by=list(interval=wkdayimputed$interval), FUN=mean)
 colnames(weekday)[2] <- "steps"
@@ -182,7 +237,8 @@ colnames(weekend)[2] <- "steps"
 
 The following code graphs weekday and weekend data separately in a panel plot.
 
-```{r fig.width=8, fig.height=6, cache=TRUE}
+
+```r
 par(mfrow = c(2, 1))
 plot(weekday$steps, type="l", xlab="Time", ylab="Average steps", main="Average steps in 5 minute interval (weekday)", axes=FALSE, col="orange")
 axis(1, at=c(1, 73, 145, 217, 288), labels=c("00:00", "06:00", "12:00", "18:00", "23:55"))
@@ -191,6 +247,8 @@ plot(weekend$steps, type="l", xlab="Time", ylab="Average steps", main="Average s
 axis(1, at=c(1, 73, 145, 217, 288), labels=c("00:00", "06:00", "12:00", "18:00", "23:55"))
 axis(2)
 ```
+
+![plot of chunk unnamed-chunk-16](figure/unnamed-chunk-16-1.png) 
 
 Activity is more spread out on weekends. Although the maximum for a 5 minute interval is lower, the level of activity is more sustained throughout the day. The individual tends to wake up later on weekends, and go to bed later on weekends. 
 
